@@ -5,16 +5,16 @@ namespace ProfilingProgram
         public void Sort(string fileName, int partLength)
         {
             var files = SplitFile(fileName, partLength);
-            SortParts(files, partLength);
+            //SortParts(files, partLength);
             SortResult(files);
         }
-
+        
         private string[] SplitFile(string fileName, int partLength)
         {
             var list = new List<string>();
             int partNumber = 0;
             
-            foreach (var batch in Batch(File.ReadLines(fileName), partLength))
+            foreach (var batch in Batch(File.ReadAllLines(fileName), partLength)) //File.ReadAllLines(fileName).Select(x => new Line(x)).Chunk(partLength)
             {
                 partNumber++;
                 var partFileName = partNumber + ".txt";
@@ -24,33 +24,6 @@ namespace ProfilingProgram
             }
             
             return list.ToArray();
-
-            // var list = new List<string>();
-            //
-            // using var reader = new StreamReader(fileName);
-            // int partNumber = 0;
-            // while (!reader.EndOfStream)
-            // {
-            //     partNumber++;
-            //     
-            //     var partFileName = partNumber + ".txt";
-            //     list.Add(partFileName);
-            //     
-            //     using (var writer = new StreamWriter(partFileName))
-            //     {
-            //         for (int i = 0; i < partLength; i++)
-            //         {
-            //             if (reader.EndOfStream)
-            //             {
-            //                 break;
-            //             }
-            //             
-            //             writer.WriteLine(reader.ReadLine());
-            //         }
-            //     }
-            // }
-            //
-            // return list.ToArray();
         }
          
         private void SortParts(string[] files, int partLength)
@@ -79,13 +52,13 @@ namespace ProfilingProgram
                 {
                     Reader = x,
                     Line = new Line(x.ReadLine())
-                }).ToList();
+                }).OrderBy(x => x.Line).ToList();
                 
                 using var writer = new StreamWriter("result.txt");
 
                 while (lines.Count > 0)
                 {
-                    var current = lines.OrderBy(x => x.Line).First();
+                    var current = lines[0];
                     writer.WriteLine(current.Line.Build());
                     
                     if (current.Reader.EndOfStream)
@@ -95,6 +68,7 @@ namespace ProfilingProgram
                     }
                     
                     current.Line = new Line(current.Reader.ReadLine());
+                    Reorder(lines);
                 }
             }
             finally
@@ -127,6 +101,26 @@ namespace ProfilingProgram
             {
                 Array.Resize(ref l, i);
                 yield return l;
+            }
+        }
+
+        private void Reorder(List<LineState> lines)
+        {
+            if (lines.Count == 1)
+            {
+                return;
+            }
+            
+            int i = 0;
+            while (lines[i].Line.CompareTo(lines[i + 1].Line) > 0)
+            {
+                (lines[i], lines[i + 1]) = (lines[i + 1], lines[i]);
+                
+                i++;
+                if (i + 1 == lines.Count)
+                {
+                    return;
+                }
             }
         }
     }
