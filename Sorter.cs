@@ -2,25 +2,48 @@ namespace ProfilingProgram
 {
     public class Sorter
     {
-        public void Sort(string fileName, int partLength)
+        public async Task Sort(string fileName, int partLength)
         {
-            var files = SplitFile(fileName, partLength);
+            var files = await SplitFile(fileName, partLength);
             //SortParts(files, partLength);
-            SortResult(files);
+            await SortResult(files);
         }
         
-        private string[] SplitFile(string fileName, int partLength)
+        private async Task<string[]> SplitFile(string fileName, int partLength)
         {
             var list = new List<string>();
             int partNumber = 0;
+            Line[] lines = new Line[partLength];
+            int i = 0;
             
-            foreach (var batch in Batch(File.ReadAllLines(fileName), partLength)) //File.ReadAllLines(fileName).Select(x => new Line(x)).Chunk(partLength)
+            using var reader = new StreamReader(fileName);
+            
+            for (string line = await reader.ReadLineAsync(); 
+                 !reader.EndOfStream;
+                 line = await reader.ReadLineAsync())
             {
+                lines[i] = new Line(line!);
+                i++;
+
+                if (i == partLength)
+                {
+                    partNumber++;
+                    var partFileName = partNumber + ".txt";
+                    list.Add(partFileName);
+                    Array.Sort(lines);
+                    await File.WriteAllLinesAsync(partFileName, lines.Select(x => x.Build()));
+                    i = 0;
+                }
+            }
+
+            if (i > 0)
+            {
+                Array.Resize(ref lines, i);
                 partNumber++;
                 var partFileName = partNumber + ".txt";
                 list.Add(partFileName);
-                Array.Sort(batch, 0, batch.Length);
-                File.WriteAllLines(partFileName, batch.Select(x => x.Build()));
+                Array.Sort(lines);
+                await File.WriteAllLinesAsync(partFileName, lines.Select(x => x.Build()));
             }
             
             return list.ToArray();
@@ -42,7 +65,7 @@ namespace ProfilingProgram
             }
         }
         
-        private void SortResult(string[] files)
+        private async Task SortResult(string[] files)
         {
             var readers = files.Select(x => new StreamReader(x)).ToList();
 
@@ -59,7 +82,7 @@ namespace ProfilingProgram
                 while (lines.Count > 0)
                 {
                     var current = lines[0];
-                    writer.WriteLine(current.Line.Build());
+                    await writer.WriteLineAsync(current.Line.Build());
                     
                     if (current.Reader.EndOfStream)
                     {
@@ -67,7 +90,7 @@ namespace ProfilingProgram
                         continue;
                     }
                     
-                    current.Line = new Line(current.Reader.ReadLine());
+                    current.Line = new Line(await current.Reader.ReadLineAsync());
                     Reorder(lines);
                 }
             }
@@ -115,8 +138,8 @@ namespace ProfilingProgram
             while (lines[i].Line.CompareTo(lines[i + 1].Line) > 0)
             {
                 (lines[i], lines[i + 1]) = (lines[i + 1], lines[i]);
-                
                 i++;
+                
                 if (i + 1 == lines.Count)
                 {
                     return;

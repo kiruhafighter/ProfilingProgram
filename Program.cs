@@ -9,7 +9,7 @@ var fileName = generator.Generate(50_000);
 
 var sorter = new Sorter();
 
-sorter.Sort(fileName, 5_000);
+await sorter.Sort(fileName, 5_000);
 
 sw.Stop();
 
