@@ -5,11 +5,11 @@ var sw = Stopwatch.StartNew();
 
 var generator = new Generator();
 
-var fileName = generator.Generate(50_000);
+var fileName = generator.Generate(5_000);
 
 var sorter = new Sorter();
 
-await sorter.Sort(fileName, 5_000);
+await sorter.Sort(fileName, 5_00);
 
 sw.Stop();
 
