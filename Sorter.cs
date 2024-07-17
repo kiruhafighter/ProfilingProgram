@@ -12,42 +12,60 @@ namespace ProfilingProgram
         private string[] SplitFile(string fileName, int partLength)
         {
             var list = new List<string>();
-            
-            using var reader = new StreamReader(fileName);
             int partNumber = 0;
-            while (!reader.EndOfStream)
+            
+            foreach (var batch in Batch(File.ReadLines(fileName), partLength))
             {
                 partNumber++;
-                
                 var partFileName = partNumber + ".txt";
                 list.Add(partFileName);
-                
-                using (var writer = new StreamWriter(partFileName))
-                {
-                    for (int i = 0; i < partLength; i++)
-                    {
-                        if (reader.EndOfStream)
-                        {
-                            break;
-                        }
-                        
-                        writer.WriteLine(reader.ReadLine());
-                    }
-                }
+                Array.Sort(batch, 0, batch.Length);
+                File.WriteAllLines(partFileName, batch.Select(x => x.Build()));
             }
             
             return list.ToArray();
+
+            // var list = new List<string>();
+            //
+            // using var reader = new StreamReader(fileName);
+            // int partNumber = 0;
+            // while (!reader.EndOfStream)
+            // {
+            //     partNumber++;
+            //     
+            //     var partFileName = partNumber + ".txt";
+            //     list.Add(partFileName);
+            //     
+            //     using (var writer = new StreamWriter(partFileName))
+            //     {
+            //         for (int i = 0; i < partLength; i++)
+            //         {
+            //             if (reader.EndOfStream)
+            //             {
+            //                 break;
+            //             }
+            //             
+            //             writer.WriteLine(reader.ReadLine());
+            //         }
+            //     }
+            // }
+            //
+            // return list.ToArray();
         }
          
         private void SortParts(string[] files, int partLength)
         {
+            Line[] lines = new Line[partLength];
             foreach (var file in files)
             {
-                var sortedLines = File.ReadAllLines(file)
-                    .Select(x => new Line(x))
-                    .OrderBy(x => x);
+                var strings = File.ReadAllLines(file);
+                for (int i = 0; i < strings.Length; i++)
+                {
+                    lines[i] = new Line(strings[i]);
+                }
                 
-                File.WriteAllLines(file, sortedLines.Select(x => x.Build()));
+                Array.Sort(lines, 0, strings.Length);
+                File.WriteAllLines(file, lines.Select(x => x.Build()));
             }
         }
         
@@ -85,6 +103,30 @@ namespace ProfilingProgram
                 {
                     reader.Dispose();
                 }
+            }
+        }
+
+        private IEnumerable<Line[]> Batch(IEnumerable<string> lines, int batchSize) // this or Chunk method???
+        {
+            Line[] l = new Line[batchSize];
+
+            int i = 0;
+            foreach (var line in lines)
+            {
+                l[i] = new Line(line);
+                i++;
+                
+                if (i == batchSize)
+                {
+                    yield return l;
+                    i = 0;
+                }
+            }
+
+            if (i > 0)
+            {
+                Array.Resize(ref l, i);
+                yield return l;
             }
         }
     }

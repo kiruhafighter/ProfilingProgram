@@ -1,32 +1,30 @@
 namespace ProfilingProgram
 {
-    public class Line : IComparable<Line>
+    public struct Line : IComparable<Line>
     {
-        public int Number { get; set; }
+        private readonly int _pos;
         
-        public string Text { get; set; }
+        private readonly string _line;
+
+        private int Number { get; }
+        
+        private ReadOnlySpan<char> Text => _line.AsSpan(_pos + 2);
         
         public Line(string line)
         {
-            int pos = line.IndexOf('.');
-            Number = int.Parse(line[..pos]);
-            Text = line[(pos + 2)..];
+            _pos = line.IndexOf('.');
+            Number = int.Parse(line.AsSpan(0, _pos));
+            _line = line;
         }
-        
-        public string Build()
+
+        public string Build() => _line;
+
+        public int CompareTo(Line other)
         {
-            return $"{Number}. {Text}";
-        }
-        
-        public int CompareTo(Line? other)
-        {
-            int result = Text.CompareTo(other.Text);
-            if (result != 0)
-            {
-                return result;
-            }
+            int result = Text.CompareTo(other.Text, StringComparison.Ordinal);
             
-            return Number.CompareTo(other.Number);
+            return result != 0 ? 
+                result : Number.CompareTo(other.Number);
         }
     }
 }
