@@ -11,7 +11,7 @@ namespace ProfilingProgram
                 .Select(x =>
                 {
                     var range = Enumerable.Range(0, _random.Next(20, 100));
-                    var chars = range.Select(x => (char)_random.Next('A', 'Z')).ToArray();
+                    var chars = range.Select(x => (char)_random.Next('A', 'Z' + 1)).ToArray();
                     var str = new string(chars);
                     return str;
                 }).ToArray();

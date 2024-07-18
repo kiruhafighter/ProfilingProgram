@@ -45,7 +45,7 @@ namespace ProfilingProgram
         private void SortResult(string[] files)
         {
             var readers = files.Select(x => new StreamReader(x)).ToList();
-
+            
             try
             {
                 var lines = readers.Select(x => new LineState

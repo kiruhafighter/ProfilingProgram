@@ -5,15 +5,15 @@ namespace ProfilingProgram
         private readonly int _pos;
         
         private readonly string _line;
-
-        private int Number { get; }
+        
+        private readonly int _number;
         
         private ReadOnlySpan<char> Text => _line.AsSpan(_pos + 2);
         
         public Line(string line)
         {
             _pos = line.IndexOf('.');
-            Number = int.Parse(line.AsSpan(0, _pos));
+            _number = int.Parse(line.AsSpan(0, _pos));
             _line = line;
         }
 
@@ -24,7 +24,7 @@ namespace ProfilingProgram
             int result = Text.CompareTo(other.Text, StringComparison.Ordinal);
             
             return result != 0 ? 
-                result : Number.CompareTo(other.Number);
+                result : _number.CompareTo(other._number);
         }
     }
 }
